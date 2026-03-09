@@ -45,7 +45,7 @@
 - **可解释**：不仅给结论，还给驱动结论的因子
 - **可比较**：能对比不同时间段散户认知变化
 
-## 5. 项目结构（给新手看的版本）
+## 5. 项目结构
 
 - `retail_factor_agent/`：主程序目录
 - `retail_factor_agent/pipeline.py`：总入口（把所有步骤串起来）
@@ -54,7 +54,7 @@
 - `.cursor/skills/retail-factor-agent/`：让 Cursor 把这套流程当作 Agent Skill 使用
 - `run_retail_factor_agent.bat`：Windows 双击运行菜单
 
-## 6. 快速开始（尽量白话）
+## 6. 快速开始
 
 ### 步骤 1：安装依赖
 
@@ -82,7 +82,7 @@ python -m retail_factor_agent.pipeline --all
 
 它会引导你输入时间段、样本量、最小字数、运行模式。
 
-## 7. 常用命令（复制即可用）
+## 7. 常用命令
 
 ```bash
 # Wind 数据处理（process + merge）
@@ -104,7 +104,7 @@ python -m retail_factor_agent.pipeline --start-date 2021-01-01 --end-date 2023-1
 - `user_factor_analysis.csv`：每条帖子最关键的贡献因子
 - `viz_*.png`：图表结果（可直接用于汇报）
 
-## 9. 术语解释（非技术读者友好）
+## 9. 术语解释
 
 - **因子**：影响价格判断的变量，比如成交量、净利润增速、情绪热度等
 - **方向**：该因子是偏利多（+1）、利空（-1）还是中性（0）
