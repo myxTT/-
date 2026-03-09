@@ -123,4 +123,3 @@ python -m retail_factor_agent.pipeline --start-date 2021-01-01 --end-date 2023-1
 ## 11. 说明
 
 - 仓库默认不包含敏感密钥与大体量原始数据（wind和大模型的api需要自己配置）
-- 若公开展示，建议上传代码和示例产物，不上传全量原始数据
