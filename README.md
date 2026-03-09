@@ -1,80 +1,124 @@
 # Retail Factor Agent for Investor Signal Mining
 
-一个面向“散户讨论文本 -> 因子结构化 -> 可解释建模”的端到端 Agent 项目。  
-目标是把复杂的研究流程产品化为可复现流水线，用于实习/项目展示与后续研究迭代。
+这是一个把“散户发帖内容”转成“可量化研究信号”的 Agent 项目。  
+如果用一句话介绍它：**它帮你在大量噪声文本里，快速看清某段时间散户到底在关注什么、为什么看多/看空、这些判断与市场结果是否一致。**
 
-## 这个 Agent 在做什么
+## 1. 为什么要做这个 Agent
 
-`Retail Factor Agent` 自动完成以下任务：
+在股票社区里，信息每天都在爆炸式增长。真正的问题不是“有没有信息”，而是“人看不过来，也不容易看准”。
 
-1. 按用户选择的时间范围获取/筛选帖子数据
-2. 在抽样前做文本清洗（字数、非 AI 生成、非公告、包含逻辑）
-3. 调用大模型提取“因子名称-数值-方向”，并强制落在全因子白名单
-4. 先基于同时间段“总因子表”重训模型
-5. 再对用户帖子因子做预测与解释（贡献度 Top 因子）
-6. 生成指标、因子权重、相关性和可视化图
+常见痛点：
 
-## 核心能力
+- 一天上千条帖子，人工很难覆盖足够样本
+- 人容易被情绪化表达吸引，忽略真正有逻辑的信息
+- 同一个结论可能有很多说法，不统一就无法统计
+- 想比较“2021年大家在想什么”和“2023年大家在想什么”时，人工几乎做不到同口径复盘
 
-- **Pipeline 化**：爬取/清洗、LLM 抽取、训练、解释、可视化串成统一命令
-- **强约束抽取**：只允许全因子表中的因子名，避免 LLM 自造特征
-- **时间段重训**：每次按用户所选日期重新过滤总表训练，保证分析一致性
-- **可解释输出**：输出权重、相关性、用户帖子因子贡献
-- **可交互运行**：提供 `bat` 菜单界面，非代码用户也可直接操作
+这个 Agent 的目标，就是把原本主观、分散、难比较的文本讨论，变成标准化、可回测、可解释的数据结果。
 
-## 项目结构
+## 2. 这个 Agent 解决了什么问题
 
-- `retail_factor_agent/`：Agent 主代码
-- `retail_factor_agent/steps/`：流程步骤模块
-- `retail_factor_agent/workspace/`：运行产物（数据、模型、图表）
-- `.cursor/skills/retail-factor-agent/`：Cursor Skill 定义
-- `run_retail_factor_agent.bat`：Windows 菜单入口
+它主要回答四个问题：
 
-## 快速开始
+- 在某个时间段，散户最常提到哪些因子？
+- 这些因子被理解成利多还是利空？
+- 因子提及强度和数值变化大概是多少？
+- 这些认知与真实市场结果是否一致，偏差点在哪？
 
-### 1) 安装依赖
+## 3. 非技术版流程说明
+
+你可以把它理解成一个“自动研究助手”，按顺序做这些事：
+
+1. **选时间段**：例如 `2022-01-01` 到 `2022-12-31`
+2. **先清洗帖子**：把太短、像公告、疑似 AI 生成、没有逻辑链的文本先过滤掉
+3. **再抽样**：从清洗后的帖子里随机选固定数量，避免样本偏差
+4. **LLM 抽因子**：从帖子中提取“因子名称 + 数值 + 方向”
+5. **训练总表模型**：先用同时间段的历史总表训练“基准认知模型”
+6. **分析用户因子**：把用户帖子因子喂给模型，输出方向概率与贡献因子
+7. **自动出图**：生成指标图、因子权重图、相关性图，便于报告和展示
+
+## 4. 为什么它比人工看帖更可靠
+
+- **规模化**：一次可处理几千条帖子
+- **统一口径**：因子必须来自白名单，减少随意命名
+- **可复现**：同样参数重复跑，结果一致
+- **可解释**：不仅给结论，还给驱动结论的因子
+- **可比较**：能对比不同时间段散户认知变化
+
+## 5. 项目结构（给新手看的版本）
+
+- `retail_factor_agent/`：主程序目录
+- `retail_factor_agent/pipeline.py`：总入口（把所有步骤串起来）
+- `retail_factor_agent/steps/`：每一步的实现代码
+- `retail_factor_agent/workspace/`：运行后自动生成的结果目录
+- `.cursor/skills/retail-factor-agent/`：让 Cursor 把这套流程当作 Agent Skill 使用
+- `run_retail_factor_agent.bat`：Windows 双击运行菜单
+
+## 6. 快速开始（尽量白话）
+
+### 步骤 1：安装依赖
 
 ```bash
 pip install -r retail_factor_agent/requirements.txt
 ```
 
-### 2) 设置大模型密钥
+### 步骤 2：配置大模型密钥
+
+配置环境变量：
 
 - `LLM_API_KEY`（或 `OPENAI_API_KEY`）
 
-### 3) 一键运行（推荐）
+### 步骤 3：直接跑全流程
 
 ```bash
 python -m retail_factor_agent.pipeline --all
 ```
 
-### 4) Windows 菜单模式
+### 步骤 4：不想用命令行就双击
 
 双击：
 
 - `run_retail_factor_agent.bat`
 
-## 常用命令
+它会引导你输入时间段、样本量、最小字数、运行模式。
+
+## 7. 常用命令（复制即可用）
 
 ```bash
 # Wind 数据处理（process + merge）
 python -m retail_factor_agent.pipeline --wind
 
-# 按时间段执行全分析
+# 自定义时间段执行全分析
 python -m retail_factor_agent.pipeline --start-date 2021-01-01 --end-date 2023-12-31 --sample-size 5000 --min-chars 120 --crawl --llm --train --analyze --viz
 ```
 
-## 关键产物
+## 8. 运行后你会看到什么结果
 
-- `retail_factor_agent/workspace/outputs/llm_factor_table.csv`
-- `retail_factor_agent/workspace/outputs/training_master_table_filtered.csv`
-- `retail_factor_agent/workspace/outputs/ml_metrics.csv`
-- `retail_factor_agent/workspace/outputs/factor_weights.csv`
-- `retail_factor_agent/workspace/outputs/factor_correlation.csv`
-- `retail_factor_agent/workspace/outputs/user_factor_analysis.csv`
-- `retail_factor_agent/workspace/outputs/viz_*.png`
+核心输出在 `retail_factor_agent/workspace/outputs/`：
 
-## 说明
+- `llm_factor_table.csv`：帖子级因子表（名称/数值/方向）
+- `training_master_table_filtered.csv`：按时间段过滤后的训练总表
+- `ml_metrics.csv`：模型效果指标
+- `factor_weights.csv`：模型学到的重要因子权重
+- `factor_correlation.csv`：因子和市场结果的相关性
+- `user_factor_analysis.csv`：每条帖子最关键的贡献因子
+- `viz_*.png`：图表结果（可直接用于汇报）
 
-- 本仓库默认不包含敏感密钥与大体量中间数据。
-- 若用于公开展示，建议仅上传 Agent 代码与示例产物，不上传原始全量数据。
+## 9. 术语解释（非技术读者友好）
+
+- **因子**：影响价格判断的变量，比如成交量、净利润增速、情绪热度等
+- **方向**：该因子是偏利多（+1）、利空（-1）还是中性（0）
+- **白名单因子**：允许提取的因子清单，避免模型“自由发挥”
+- **总表重训**：先用历史标准数据训练，再分析用户帖子，保证口径一致
+- **可解释性**：不只告诉你“涨跌判断”，还告诉你“为什么这么判断”
+
+## 10. 使用建议
+
+- 做阶段复盘时，建议固定时间窗口（如按月/季度）跑，便于横向比较
+- 第一次跑先用小样本调参数，再扩到5000条
+- 对外展示时优先放图表+`user_factor_analysis.csv`示例，更容易让非技术听众理解
+
+## 11. 说明
+
+- 仓库默认不包含敏感密钥与大体量原始数据
+- 若公开展示，建议上传代码和示例产物，不上传全量原始数据
